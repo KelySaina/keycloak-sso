@@ -1,0 +1,4 @@
+:{$HTTPS_PORT} {
+    tls internal
+    reverse_proxy localhost:{$KEYCLOAK_HTTP_PORT}
+}

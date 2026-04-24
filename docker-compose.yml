@@ -42,9 +42,9 @@ services:
       KC_DB_URL: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
       KC_HTTP_ENABLED: "true"
       KC_HTTP_PORT: ${KEYCLOAK_HTTP_PORT}
+      KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
       KC_METRICS_ENABLED: "true"
     command:
@@ -59,9 +59,32 @@ services:
       retries: 15
       start_period: 30s
 
+  # ---------------------------------------------------------------------------
+  # Caddy — Reverse proxy with automatic self-signed TLS
+  # ---------------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    container_name: keycloak-caddy
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      HTTPS_PORT: ${KEYCLOAK_HTTPS_PORT}
+      KEYCLOAK_HTTP_PORT: ${KEYCLOAK_HTTP_PORT}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
 # =============================================================================
 # Volumes
 # =============================================================================
 volumes:
   postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
