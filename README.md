@@ -12,6 +12,9 @@ Both services use host networking.
 ## Quick Start
 
 ```bash
+# Copy and edit environment variables
+cp .env.example .env
+
 # Start
 docker compose up -d
 
@@ -37,12 +40,12 @@ docker compose down -v
 
 All settings are in `.env`:
 
-| Variable                 | Default              | Description              |
-|--------------------------|----------------------|--------------------------|
-| `KEYCLOAK_ADMIN`         | `admin`              | Admin username           |
-| `KEYCLOAK_ADMIN_PASSWORD`| `Admin123!`          | Admin password           |
-| `KEYCLOAK_HOSTNAME`      | `localhost`          | Keycloak hostname        |
-| `KEYCLOAK_HTTP_PORT`     | `48080`              | Keycloak HTTP port       |
-| `POSTGRES_DB`            | `keycloak`           | Database name            |
-| `POSTGRES_USER`          | `keycloak`           | Database user            |
-| `POSTGRES_PASSWORD`      | `keycloak_secret_2024`| Database password       |
+| Variable                 | Description              |
+|--------------------------|--------------------------|
+| `KEYCLOAK_ADMIN`         | Admin username           |
+| `KEYCLOAK_ADMIN_PASSWORD`| Admin password           |
+| `KEYCLOAK_HOSTNAME`      | Keycloak hostname        |
+| `KEYCLOAK_HTTP_PORT`     | Keycloak HTTP port       |
+| `POSTGRES_DB`            | Database name            |
+| `POSTGRES_USER`          | Database user            |
+| `POSTGRES_PASSWORD`      | Database password        |
