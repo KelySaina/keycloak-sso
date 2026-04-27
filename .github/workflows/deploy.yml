@@ -29,6 +29,23 @@ jobs:
           docker compose pull
           docker compose up -d --remove-orphans
 
+      - name: Ensure DB role exists
+        run: |
+          # Wait for postgres to be ready
+          for i in $(seq 1 15); do
+            docker exec keycloak-db pg_isready -U postgres && break
+            sleep 2
+          done
+          # Create role if it doesn't exist
+          docker exec keycloak-db psql -U postgres -tc \
+            "SELECT 1 FROM pg_roles WHERE rolname='${{ secrets.POSTGRES_USER }}'" \
+            | grep -q 1 \
+            || docker exec keycloak-db psql -U postgres -c \
+            "CREATE ROLE \"${{ secrets.POSTGRES_USER }}\" WITH LOGIN PASSWORD '${{ secrets.POSTGRES_PASSWORD }}'; \
+             GRANT ALL PRIVILEGES ON DATABASE \"${{ secrets.POSTGRES_DB }}\" TO \"${{ secrets.POSTGRES_USER }}\";"
+          # Restart keycloak so it can connect with the new role
+          docker compose restart keycloak
+
       - name: Wait for healthy
         run: |
           for i in $(seq 1 30); do
