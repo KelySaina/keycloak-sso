@@ -2,7 +2,7 @@
 	auto_https disable_redirects
 }
 
-:{$HTTPS_PORT} {
+https://{$KEYCLOAK_HOSTNAME}:{$HTTPS_PORT} {
 	tls internal
 	reverse_proxy localhost:{$KEYCLOAK_HTTP_PORT}
 }
