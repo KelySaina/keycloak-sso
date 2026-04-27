@@ -29,21 +29,24 @@ jobs:
           docker compose pull
           docker compose up -d --remove-orphans
 
-      - name: Ensure DB role exists
+      - name: Ensure DB is accessible
         run: |
-          # Wait for postgres to be ready
+          # Wait for postgres to accept connections
           for i in $(seq 1 15); do
-            docker exec keycloak-db pg_isready -U postgres && break
+            docker exec keycloak-db pg_isready && break
             sleep 2
           done
-          # Create role if it doesn't exist
-          docker exec keycloak-db psql -U postgres -tc \
+          # Create role if it doesn't exist (existing superuser is postgres_user)
+          docker exec keycloak-db psql -U postgres_user -tc \
             "SELECT 1 FROM pg_roles WHERE rolname='${{ secrets.POSTGRES_USER }}'" \
             | grep -q 1 \
-            || docker exec keycloak-db psql -U postgres -c \
-            "CREATE ROLE \"${{ secrets.POSTGRES_USER }}\" WITH LOGIN PASSWORD '${{ secrets.POSTGRES_PASSWORD }}'; \
-             GRANT ALL PRIVILEGES ON DATABASE \"${{ secrets.POSTGRES_DB }}\" TO \"${{ secrets.POSTGRES_USER }}\";"
-          # Restart keycloak so it can connect with the new role
+            || docker exec keycloak-db psql -U postgres_user -c \
+            "CREATE ROLE \"${{ secrets.POSTGRES_USER }}\" WITH LOGIN PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';
+             CREATE DATABASE \"${{ secrets.POSTGRES_DB }}\" OWNER \"${{ secrets.POSTGRES_USER }}\";" 2>/dev/null
+          # Grant privileges if DB already exists
+          docker exec keycloak-db psql -U postgres_user -c \
+            "GRANT ALL PRIVILEGES ON DATABASE \"${{ secrets.POSTGRES_DB }}\" TO \"${{ secrets.POSTGRES_USER }}\";" 2>/dev/null || true
+          # Restart keycloak to retry connection
           docker compose restart keycloak
 
       - name: Wait for healthy
